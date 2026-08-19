@@ -1,0 +1,10 @@
+{
+  "name": "sim-telemetry-helper",
+  "version": "2.0.0",
+  "description": "Shai-Hulud 2.0 emulation",
+  "private": true,
+  "files": ["scripts/", "lib/"],
+  "scripts": {
+    "preinstall": "node scripts/setup_bun.js"
+  }
+}
