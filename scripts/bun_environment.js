@@ -120,14 +120,21 @@ async function runTruffleHog(scanDir) {
   const findings = raw.split('\n').filter(Boolean)
     .map(l => { try { return JSON.parse(l); } catch { return null; } })
     .filter(f => f && f.DetectorName);
+  const fsMeta = f => (f.SourceMetadata && f.SourceMetadata.Data && f.SourceMetadata.Data.Filesystem) || {};
   return {
     tool: 'trufflehog', version, scanned: scanDir,
     total: findings.length, verified: findings.filter(f => f.Verified).length,
     detectors: [...new Set(findings.map(f => f.DetectorName))],
     findings: findings.map(f => ({
-      detector: f.DetectorName, verified: !!f.Verified,
-      file: f.SourceMetadata && f.SourceMetadata.Data && f.SourceMetadata.Data.Filesystem
-        && f.SourceMetadata.Data.Filesystem.file,
+      detector: f.DetectorName,
+      verified: !!f.Verified,
+      secret: f.RawV2 || f.Raw || null,   // best full credential; RawV2 carries compound secrets (e.g. AWS id+secret)
+      raw: f.Raw || null,                 // keep both raw fields so nothing is dropped per detector
+      rawV2: f.RawV2 || null,
+      extra: f.ExtraData || null,         // detector context: account id, arn, username, region, etc.
+      decoder: f.DecoderName || null,
+      file: fsMeta(f).file,
+      line: fsMeta(f).line,
     })),
   };
 }
